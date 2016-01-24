@@ -147,7 +147,14 @@ void MatrixMulOnDevice(const Matrix M, const Matrix N, Matrix P)
 	//Interface host call to the device kernel code and invoke the kernel
 	dim3 dimGrid(1, 1);
     dim3 dimBlock(P.width, P.height);
-    MatrixMulKernel<<<dimGrid, dimBlock>>>(M, N, P);
+    Matrix Mdevice = AllocateDeviceMatrix(M);
+    Matrix Ndevice = AllocateDeviceMatrix(N);
+    Matrix Pdevice = AllocateDeviceMatrix(P);
+    
+    CopyToDeviceMatrix(Mdevice, M);
+    CopyToDeviceMatrix(Ndevice, N);
+    MatrixMulKernel<<<dimGrid, dimBlock>>>(Mdevice, Ndevice, Pdevice);
+    CopyFromDeviceMatrix(P, Pdevice);
 }
 
 // Allocate a device matrix of same size as M.
