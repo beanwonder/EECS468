@@ -145,12 +145,9 @@ int main(int argc, char** argv) {
 void MatrixMulOnDevice(const Matrix M, const Matrix N, Matrix P)
 {
 	//Interface host call to the device kernel code and invoke the kernel
-	
-	
-	
-	
-	
-	
+	dim3 dimGrid(1, 1);
+    dim3 dimBlock(P.width, P.height);
+    MatrixMulKernel<<<dimGrid, dimBlock>>>(M, N, P);
 }
 
 // Allocate a device matrix of same size as M.
