@@ -61,7 +61,7 @@ __global__ void MatrixMulKernel(Matrix M, Matrix N, Matrix P)
     float sum = 0;
     
     for (int i=0; i < w; i++) {
-          sum = Mmatrix[threadIdx.y*w + i] * Nmatrix[i*w + threadIdx.x];          
+          sum += Mmatrix[threadIdx.y*w + i] * Nmatrix[i*w + threadIdx.x];          
     }
     Pmatrix[threadIdx.y*w + threadIdx.x] = sum;
 }
