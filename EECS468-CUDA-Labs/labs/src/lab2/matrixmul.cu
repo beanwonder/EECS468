@@ -153,11 +153,15 @@ void MatrixMulOnDevice(const Matrix M, const Matrix N, Matrix P)
 	CopyToDeviceMatrix(Pd, P); // Clear memory
 
 	// Setup the execution configuration
+    const int TILE_DIM = 16;
+    dim3 dimBlock(TILE_DIM, TILE_DIM);
+    dim3 dimGrid((Pd.width/TILE_DIM)+1, (Pd.height/TILE_DIM)+1);
 
-	// Launch the device computation threads!
+    // Launch the device computation threads!
+    MatrixMulKernel<<<dimGrid, dimBlock>>>(Md, Nd, Pd);
 
-	// Read P from the device
-	CopyFromDeviceMatrix(P, Pd); 
+    // Read P from the device
+    CopyFromDeviceMatrix(P, Pd); 
 
 	// Free device matrices
 	FreeDeviceMatrix(&Md);

@@ -51,8 +51,31 @@
 // Matrix multiplication kernel thread specification
 __global__ void MatrixMulKernel(Matrix M, Matrix N, Matrix P)
 {
+    const int TILE_DIM = 16;
+    const int Pcols = P.width;
+    const int Prows = P.height;
+    const int Mcols = M.width;
+    const int Mrows = M.height;
+    const int Ncols = N.width;
+    const int Nrows = N.height;
+    // calc row index
+    int row = blockIdx.y * TILE_DIM + threadIdx.y;
+    // calc colum index
+    int col = blockIdx.x * TILE_DIM + threadIdx.x;
 
+    float Pvalue = 0;
+    for (int k=0; k < (TILE_DIM+Mcols-1)/TILE_DIM; ++k) {
+        for (int n=0; n < TILE_DIM; ++n) {
+            if ((k*TILE_DIM + n < Mcols && row < Mrows) && (k*TILE_DIM + n < Nrows && col < Ncols)) {
+                Pvalue += M.elements[row*Mcols + k*TILE_DIM + n] * N.elements[(k*TILE_DIM + n)*Ncols + col];
+            }
+        }
+    }
 
+    if (row < Prows && col < Pcols) {
+        // P.elements[((blockIdx.y * blockDim.y + threadIdx.y)*Pwidth)+(blockIdx.x*blockDim.x)+threadIdx.x] = Pvalue;
+        P.elements[row * Pcols + col] = Pvalue;
+    }
 }
 
 #endif // #ifndef _MATRIXMUL_KERNEL_H_
