@@ -35,5 +35,5 @@
 *.out
 *.app
 
-*/bin/*
+EECS468-CUDA-Labs/labs/bin/
 *.tgz

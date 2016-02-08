@@ -51,7 +51,10 @@
 // Matrix multiplication kernel thread specification
 __global__ void MatrixMulKernel(Matrix M, Matrix N, Matrix P)
 {
-    const int TILE_DIM = 16;
+    const int TILE_DIM = 32;
+    __shared__ float Ms[TILE_DIM][TILE_DIM];
+    __shared__ float Ns[TILE_DIM][TILE_DIM];
+
     const int Pcols = P.width;
     const int Prows = P.height;
     const int Mcols = M.width;
@@ -63,16 +66,36 @@ __global__ void MatrixMulKernel(Matrix M, Matrix N, Matrix P)
     // calc colum index
     int col = blockIdx.x * TILE_DIM + threadIdx.x;
 
-    float Pvalue = 0;
+    float Pvalue = 0.0;
     for (int k=0; k < (TILE_DIM+Mcols-1)/TILE_DIM; ++k) {
-        for (int n=0; n < TILE_DIM; ++n) {
-            if ((k*TILE_DIM + n < Mcols && row < Mrows) && (k*TILE_DIM + n < Nrows && col < Ncols)) {
-                Pvalue += M.elements[row*Mcols + k*TILE_DIM + n] * N.elements[(k*TILE_DIM + n)*Ncols + col];
-            }
+        // every thread within a block load [TILE_SIZE] into shared memery
+        if (k*TILE_DIM + threadIdx.x < Mcols && row < Mrows) {
+            Ms[threadIdx.y][threadIdx.x] = M.elements[row*Mcols + k*TILE_DIM + threadIdx.x];
         }
+        else {
+            Ms[threadIdx.y][threadIdx.x] = 0.0;
+        }
+
+        if (k*TILE_DIM + threadIdx.y < Nrows && col < Ncols) {
+            Ns[threadIdx.y][threadIdx.x] = N.elements[(k*TILE_DIM + threadIdx.y)*Ncols + col];
+        } else {
+            Ns[threadIdx.y][threadIdx.x] = 0.0;
+        }
+        // wait for load all into shared mem
+        __syncthreads();
+
+        for (int n=0; n < TILE_DIM; ++n) {
+            // if ((k*TILE_DIM + n < Mcols && row < Mrows) && (k*TILE_DIM + n < Nrows && col < Ncols)) {
+                // but divergence
+            // no divergence since load zero for unvalid data
+            Pvalue += Ms[threadIdx.y][n] * Ns[n][threadIdx.x];
+            // }
+        }
+        __syncthreads();
     }
 
     if (row < Prows && col < Pcols) {
+        // divergence
         // P.elements[((blockIdx.y * blockDim.y + threadIdx.y)*Pwidth)+(blockIdx.x*blockDim.x)+threadIdx.x] = Pvalue;
         P.elements[row * Pcols + col] = Pvalue;
     }
