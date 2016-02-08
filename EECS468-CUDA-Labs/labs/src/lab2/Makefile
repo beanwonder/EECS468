@@ -1,11 +1,17 @@
-###############################################################################
+################################################################################
 #
-# Copyright 1993-2010 NVIDIA Corporation.  All rights reserved.
+# Copyright 1993-2006 NVIDIA Corporation.  All rights reserved.
 #
 # NOTICE TO USER:   
 #
 # This source code is subject to NVIDIA ownership rights under U.S. and 
 # international Copyright laws.  
+#
+# This software and the information contained herein is PROPRIETARY and 
+# CONFIDENTIAL to NVIDIA and is being provided under the terms and 
+# conditions of a Non-Disclosure Agreement.  Any reproduction or 
+# disclosure to any third party without the express written consent of 
+# NVIDIA is prohibited.     
 #
 # NVIDIA MAKES NO REPRESENTATION ABOUT THE SUITABILITY OF THIS SOURCE 
 # CODE FOR ANY PURPOSE.  IT IS PROVIDED "AS IS" WITHOUT EXPRESS OR 
@@ -27,23 +33,24 @@
 # 227.7202-4 (JUNE 1995), all U.S. Government End Users acquire the 
 # source code with only those rights set forth herein.
 #
-###############################################################################
+################################################################################
 #
-# CUda UTility library build script
+# Build script for project
 #
-###############################################################################
+################################################################################
 
-###############################################################################
-# SOURCE VARS
-CCFILES := 	src/shrUtils.cpp \
-            src/rendercheckGL.cpp \
-            src/cmd_arg_reader.cpp
+# Add source files here
+EXECUTABLE	:= lab2
 
-SRCDIR := src/
+# Cuda source files (compiled with cudacc)
+CUFILES		:= matrixmul.cu
 
-ROOTDIR := .
+# C/C++ source files (compiled with gcc / c++)
+CCFILES		:= matrixmul_gold.cpp
 
-STATIC_LIB := libshrutil.a
+CUDEPS		:= matrixmul_kernel.cu
 
-include common.mk
+################################################################################
+# Rules and targets
 
+include ../../common/common.mk
