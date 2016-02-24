@@ -66,12 +66,12 @@ int main(int argc, char* argv[])
 {
     /* Case of 0 arguments: Default seed is used */
     if (argc < 2){
-	srand48(0);
+	   srand48(0);
     }
     /* Case of 1 argument: Seed is specified as first command line argument */ 
     else {
 	int seed = atoi(argv[1]);
-	srand48(seed);
+	   srand48(seed);
     }
 
     uint8_t *gold_bins = (uint8_t*)malloc(HISTO_HEIGHT*HISTO_WIDTH*sizeof(uint8_t));
@@ -88,9 +88,9 @@ int main(int argc, char* argv[])
             ref_2dhisto(input, INPUT_HEIGHT, INPUT_WIDTH, gold_bins);)
 
     /* Include your setup code below (temp variables, function calls, etc.) */
-
-
-
+    uint32_t *dev_his_bins = allocate_device_histogram_bins(INPUT_HEIGHT, INPUT_WIDTH);
+    uint8_t *dev_bins = allocate_device_bins(HISTO_HEIGHT, HISTO_WIDTH);
+    copy_to_device_histogram_bins(dev_his_bins, *input, INPUT_HEIGHT, INPUT_WIDTH);
     /* End of setup code */
 
     /* This is the call you will use to time your parallel implementation */
@@ -99,9 +99,8 @@ int main(int argc, char* argv[])
             opt_2dhisto( /*Define your own function parameters*/ );)
 
     /* Include your teardown code below (temporary variables, function calls, etc.) */
-
-
-
+    copy_from_device_bins(kernel_bins, dev_bins, HISTO_HEIGHT, HISTO_WIDTH);
+    
     /* End of teardown code */
 
     int passed=1;
