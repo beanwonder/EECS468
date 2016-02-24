@@ -16,11 +16,13 @@ void opt_2dhisto( /*define your own function parameters*/ )
 
 /* Include below the implementation of any other functions you need */
 
-uint32_t* allocate_device_histogram_bins(size_t height, size_t width) {
-    int size = width * height * sizeof(uint32_t);
+uint32_t* allocate_device_histogram_bins(size_t y_size, size_t x_size) {
+    // void** alloc_2d(size_t y_size, size_t x_size, size_t element_size)
+    const size_t x_size_padded = (x_size + 128) & 0xFFFFFF80;
+    int total_size = x_size_padded * y_size * sizeof(uint32_t);
     uint32_t *dev_ptr;
     // cudaMalloc((void**)&Mdevice.elements, size);
-    cudaMalloc((void**)&dev_ptr, size);
+    cudaMalloc((void**)&dev_ptr, total_size);
     return dev_ptr;
 }
 
@@ -31,9 +33,11 @@ uint8_t* allocate_device_bins(size_t height, size_t width) {
     return dev_ptr;
 }
 
-void copy_to_device_histogram_bins(uint32_t *device, const uint32_t *host, size_t h, size_t w)
+void copy_to_device_histogram_bins(uint32_t *device, const uint32_t *host, 
+                                   size_t y_size, size_t x_size)
 {
-	int size = h * w * sizeof(uint32_t);
+    const size_t x_size_padded = (x_size + 128) & 0xFFFFFF80;
+	int size = x_size_padded * y_size * sizeof(uint32_t);
     cudaMemcpy(device, host, size, cudaMemcpyHostToDevice);
 }
 
