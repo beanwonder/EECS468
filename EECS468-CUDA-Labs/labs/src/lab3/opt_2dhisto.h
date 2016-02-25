@@ -4,9 +4,12 @@
 void opt_2dhisto( /*Define your own function parameters*/ );
 
 /* Include below the function headers of any other functions that you implement */
-uint32_t* allocate_device_histogram_bins(size_t height, size_t width);
-uint8_t* allocate_device_bins(size_t height, size_t width);
+uint32_t* allocate_device_histogram_bins(size_t y_size, size_t x_size);
+uint32_t** allocate_device_hist_bin_ptrs(size_t nums);
+uint8_t* allocate_device_bins(size_t y_size, size_t x_size);
+
 void copy_to_device_histogram_bins(uint32_t *device, const uint32_t *host, size_t h, size_t w);
+void copy_to_device_histo_bins_ptrs(uint32_t **dev, uint32_t *dev_his_bins, size_t y_size, size_t x_size);
 void copy_from_device_bins(uint8_t *host, const uint8_t *device, size_t h, size_t w);
 
 #endif

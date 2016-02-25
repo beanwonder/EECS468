@@ -26,11 +26,37 @@ uint32_t* allocate_device_histogram_bins(size_t y_size, size_t x_size) {
     return dev_ptr;
 }
 
+uint32_t** allocate_device_hist_bin_ptrs(size_t num)
+{
+    int total_size = num * sizeof(void*);
+    uint32_t **dev_ptr;
+    cudaMalloc((void**)&dev_ptr, total_size);
+    return dev_ptr;
+}
+
 uint8_t* allocate_device_bins(size_t height, size_t width) {
     int size = width * height * sizeof(uint8_t);
     uint8_t *dev_ptr;
     cudaMalloc((void**)&dev_ptr, size);
     return dev_ptr;
+}
+
+void copy_to_device_histo_bins_ptrs(uint32_t **device, uint32_t *dev_his_bins,
+                                    size_t y_size, size_t x_size)
+{
+    const size_t x_size_padded = (x_size + 128) & 0xFFFFFF80;
+    void **res  = (void**) calloc(y_size, sizeof(void*));
+    if (res == 0)
+    {
+        free (res);
+        res = 0;
+        abort();
+    }
+
+    for (size_t i = 0; i < y_size; ++i) {
+        res[i] = dev_his_bins + (i * x_size_padded * sizeof(uint32_t));
+    }
+    cudaMemcpy(device, res, y_size*sizeof(void*), cudaMemcpyHostToDevice);
 }
 
 void copy_to_device_histogram_bins(uint32_t *device, const uint32_t *host, 

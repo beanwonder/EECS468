@@ -1,0 +1,28 @@
+In your kernel implementation of tiled matrix multiplication, how many threads can be simultaneously scheduled for execution on a GeForce GTX-680 GPU?
+
+* resources avaible to GTX-680
+Device 0: "GeForce GTX 680"
+CUDA Driver Version / Runtime Version          7.5 / 5.0
+CUDA Capability Major/Minor version number:    3.0
+Total amount of global memory:                 2047 MBytes (2146762752 bytes)
+( 8 ) Multiprocessors x (192) CUDA Cores/MP:   1536 CUDA Cores
+Total amount of shared memory per block:       49152 bytes
+Total number of registers available per block: 65536
+Maximum number of threads per multiprocessor:  2048
+Maximum number of threads per block:           1024
+Maximum sizes of each dimension of a block:    1024 x 1024 x 64
+Maximum sizes of each dimension of a grid:     2147483647 x 65535 x 65535
+Maximum memory pitch:                          2147483647 bytes
+
+
+* nvcc complition resources allocation
+ptxas info    : Used 25 registers, 8448 bytes smem, 392 bytes cmem[0]
+
+* since the block size is 32 * 32 = 1024 < 1024 (maximun number of thread per blocks);
+* since total thread per multiprocessors is 2048, each MPS can schedule up to 2 blocks and 8 MPS add to 16 blocks total;
+* 65535 / 25 = 2621.4  > 2048;
+* in shared memory, 8448 bytes is used for each block
+  49152 / 8844 = 5 blocks per Multiprocessor
+
+  combine all these limitaiton we can have 2 blocks per Multiprocessors and we have 8 mutiprocessor and each block have 1024 thread
+  total thread 8 * 2 * 1024 = 16384 threads schedule simultaneously
