@@ -7,8 +7,8 @@
 #include <cutil.h>
 
 #include "util.h"
-#include "ref_2dhisto.h"
 #include "opt_2dhisto.h"
+#include "ref_2dhisto.h"
 
 #define SQRT_2    1.4142135623730950488
 #define SPREAD_BOTTOM   (2)
@@ -33,8 +33,7 @@ static uint32_t next_bin(uint32_t pix)
     CLAMP(new_bottom, 0, HISTO_WIDTH-1)
 
     int new_top = NEXT(top, SPREAD_TOP)
-    CLAMP(new_top, 0, HISTO_HEIGHT-1)
-
+    CLAMP(new_top,0,HISTO_HEIGHT-1)
     const uint32_t result = (new_bottom | (new_top << HISTO_LOG));
 
     return result;
@@ -44,6 +43,7 @@ static uint32_t next_bin(uint32_t pix)
 // bin-ids with correlation characteristics similar to some actual images.
 // The key point here is that the pixels (and thus the bin-ids) are *NOT*
 // randomly distributed ... a given pixel tends to be similar to the
+
 // pixels near it.
 static uint32_t **generate_histogram_bins()
 {
@@ -66,12 +66,12 @@ int main(int argc, char* argv[])
 {
     /* Case of 0 arguments: Default seed is used */
     if (argc < 2){
-	   srand48(0);
+    	srand48(0);
     }
     /* Case of 1 argument: Seed is specified as first command line argument */
     else {
-	int seed = atoi(argv[1]);
-	   srand48(seed);
+        int seed = atoi(argv[1]);
+        srand48(seed);
     }
 
     uint8_t *gold_bins = (uint8_t*)malloc(HISTO_HEIGHT*HISTO_WIDTH*sizeof(uint8_t));
@@ -83,35 +83,50 @@ int main(int argc, char* argv[])
     // being associated with a pixel in a 2D image.
     uint32_t **input = generate_histogram_bins();
 
-    // TODO enable later
-    /*
+
     TIME_IT("ref_2dhisto",
             1000,
             ref_2dhisto(input, INPUT_HEIGHT, INPUT_WIDTH, gold_bins);)
-    */
+
+
+    // copy with no padding data padding sucks
+    // allcate data on device
+    // uint32_t *  data = setup(newinput, INPUT_WIDTH, INPUT_HEIGHT);
+    //
+    uint32_t *hist_data = histogram_data_device(input, INPUT_HEIGHT, INPUT_WIDTH);
+    uint32_t *device_data = (uint32_t*)allocate_device(INPUT_HEIGHT*INPUT_WIDTH*sizeof(uint32_t));
+    copy_to_device(device_data, hist_data, INPUT_HEIGHT*INPUT_WIDTH*sizeof(uint32_t));
+
+    // prepare histo bin on device
+    uint32_t *device_bins = (uint32_t*)allocate_device(HISTO_HEIGHT*HISTO_WIDTH*sizeof(uint32_t));
 
     /* Include your setup code below (temp variables, function calls, etc.) */
-    uint32_t *dev_his_bins = allocate_device_histogram_bins(INPUT_HEIGHT, INPUT_WIDTH);
-    uint32_t **dev_his_bin_ptrs = allocate_device_hist_bin_ptrs(INPUT_HEIGHT);
-    uint8_t *dev_bins = allocate_device_bins(HISTO_HEIGHT, HISTO_WIDTH);
 
-    copy_to_device_histogram_bins(dev_his_bins, *input, INPUT_HEIGHT, INPUT_WIDTH);
-    copy_to_device_histo_bins_ptrs(dev_his_bin_ptrs, dev_his_bins, INPUT_HEIGHT, INPUT_WIDTH);
-    /* End of setup code */
 
-    /* This is the call you will use to time your parallel implementation */
+    /* This is the call
+     * you will use to time your parallel implementation */
     TIME_IT("opt_2dhisto",
             1000,
-            opt_2dhisto( /*Define your own function parameters*/ );)
+            opt_2dhisto(device_bins, device_data, INPUT_HEIGHT, INPUT_WIDTH);)
 
     /* Include your teardown code below (temporary variables, function calls, etc.) */
-    copy_from_device_bins(kernel_bins, dev_bins, HISTO_HEIGHT, HISTO_WIDTH);
+
+    //copy uint32_t histogram
+    uint32_t *kernel_bins32 = (uint32_t*)malloc(HISTO_HEIGHT*HISTO_WIDTH*sizeof(uint32_t));
+    copy_from_device(kernel_bins32, device_bins, HISTO_HEIGHT*HISTO_WIDTH*sizeof(uint32_t));
+
+    // result
+    bin32_to_bin8(kernel_bins32, kernel_bins);
+
+    // for debug reason
 
     /* End of teardown code */
+    free_device(device_data);
+    free_device(device_bins);
 
     int passed=1;
-    for (int i=0; i < HISTO_HEIGHT*HISTO_WIDTH; i++){
-        if (gold_bins[i] != kernel_bins[i]){
+    for(int i=0; i < HISTO_HEIGHT*HISTO_WIDTH; i++){
+	 if (gold_bins[i] != kernel_bins[i]){
             passed = 0;
             break;
         }
@@ -120,4 +135,5 @@ int main(int argc, char* argv[])
 
     free(gold_bins);
     free(kernel_bins);
+    free(kernel_bins32);
 }

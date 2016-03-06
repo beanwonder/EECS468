@@ -1,15 +1,26 @@
 #ifndef OPT_KERNEL
 #define OPT_KERNEL
 
-void opt_2dhisto( /*Define your own function parameters*/ );
+void opt_2dhisto(uint32_t *result, uint32_t *input, int height, int width);
 
 /* Include below the function headers of any other functions that you implement */
-uint32_t* allocate_device_histogram_bins(size_t y_size, size_t x_size);
-uint32_t** allocate_device_hist_bin_ptrs(size_t nums);
-uint8_t* allocate_device_bins(size_t y_size, size_t x_size);
 
-void copy_to_device_histogram_bins(uint32_t *device, const uint32_t *host, size_t h, size_t w);
-void copy_to_device_histo_bins_ptrs(uint32_t **dev, uint32_t *dev_his_bins, size_t y_size, size_t x_size);
-void copy_from_device_bins(uint8_t *host, const uint8_t *device, size_t h, size_t w);
+uint32_t *histogram_data_device(uint32_t** input, int height, int width);
 
+void* allocate_device(size_t s);
+void copy_to_device(void *device, void *host, size_t s);
+void copy_from_device(void* host, void *device, size_t s);
+void bin32_to_bin8(uint32_t *k32, uint8_t *k8);
+
+void free_device(void* device);
+// void copy_final(uint32_t *data, uint32_t  *histo_bin, uint32_t *histo);
+
+// uint32_t ** setup_data(uint32_t ** input, int width, int height);
+
+// uint8_t * setup_histo();
+
+// uint32_t * setup(uint32_t * input, int width,int height);
+
+
+// uint32_t * setuphisto();
 #endif

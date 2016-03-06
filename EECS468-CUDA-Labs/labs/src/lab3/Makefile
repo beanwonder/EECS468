@@ -52,3 +52,6 @@ CCFILES		:= test_harness.cpp util.cpp ref_2dhisto.cpp
 # Rules and targets
 
 include ../../common/common.mk
+.PHONY: test
+test:
+	../../bin/linux/release/lab3

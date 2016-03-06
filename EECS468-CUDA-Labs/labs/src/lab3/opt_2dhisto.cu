@@ -1,74 +1,104 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <iostream>
 
 #include <cutil.h>
+
 #include "util.h"
 #include "ref_2dhisto.h"
+#include "opt_2dhisto.h"
+#include "device_function.h"
+#include <cuda.h>
 
-void opt_2dhisto( /*define your own function parameters*/ )
+void opt_2dhisto(uint32_t * result, uint32_t * input, int height, int width)
 {
-    /* This function should only contain a call to the GPU 
-       histogramming kernel. Any memory allocations and
-       transfers must be done outside this function */
+    int size = height * width;
+    dim3 dim_grid((size - 1) / 1024+1, 1, 1);
+    dim3 dim_block(1024, 1, 1);
 
+    histogram_kernel<<<dim_grid, dim_block>>>(result, input, height, width);
+
+    cudaDeviceSynchronize();
 }
 
-/* Include below the implementation of any other functions you need */
-
-uint32_t* allocate_device_histogram_bins(size_t y_size, size_t x_size) {
-    // void** alloc_2d(size_t y_size, size_t x_size, size_t element_size)
-    const size_t x_size_padded = (x_size + 128) & 0xFFFFFF80;
-    int total_size = x_size_padded * y_size * sizeof(uint32_t);
-    uint32_t *dev_ptr;
-    // cudaMalloc((void**)&Mdevice.elements, size);
-    cudaMalloc((void**)&dev_ptr, total_size);
-    return dev_ptr;
-}
-
-uint32_t** allocate_device_hist_bin_ptrs(size_t num)
+uint32_t* histogram_data_device(uint32_t *input[], int h, int w)
 {
-    int total_size = num * sizeof(void*);
-    uint32_t **dev_ptr;
-    cudaMalloc((void**)&dev_ptr, total_size);
-    return dev_ptr;
+    uint32_t *histo_bins = (uint32_t* ) malloc(h*w*sizeof(uint32_t));
+    for(int i= 0; i < h;  i++) {
+        for(int j=0; j < w; j++) {	
+            histo_bins[i*w+j] = input[i][j];  
+        }
+    }
+    return  histo_bins;
 }
 
-uint8_t* allocate_device_bins(size_t height, size_t width) {
-    int size = width * height * sizeof(uint8_t);
-    uint8_t *dev_ptr;
-    cudaMalloc((void**)&dev_ptr, size);
-    return dev_ptr;
-}
-
-void copy_to_device_histo_bins_ptrs(uint32_t **device, uint32_t *dev_his_bins,
-                                    size_t y_size, size_t x_size)
+__global__ void histogram_kernel(uint32_t *result, uint32_t *input, int height, int width)
 {
-    const size_t x_size_padded = (x_size + 128) & 0xFFFFFF80;
-    void **res  = (void**) calloc(y_size, sizeof(void*));
-    if (res == 0)
-    {
-        free (res);
-        res = 0;
-        abort();
+    int size = height * width;
+
+    __shared__ uint32_t s_Hist[6][HISTO_HEIGHT * HISTO_WIDTH];
+
+    for (size_t j = threadIdx.x; j <HISTO_HEIGHT * HISTO_WIDTH ; j += blockDim.x) {
+        // segementation fo s hist gram
+        s_Hist[0][j] = 0;
+        s_Hist[1][j] = 0;
+        s_Hist[2][j] = 0;
+        s_Hist[3][j] = 0;
+        s_Hist[4][j] = 0;
+        s_Hist[5][j] = 0;
+
+        if (blockIdx.x==0) {
+            result[j] = 0;
+            // each time you have to clear result
+        }
+    }
+    __syncthreads();
+
+    for (size_t i = blockIdx.x * blockDim.x + threadIdx.x; i < size; i += blockDim.x * gridDim.x) {
+        const uint32_t data = input[i];
+        atomicAdd(s_Hist[i % 6] + data, 1);
     }
 
-    for (size_t i = 0; i < y_size; ++i) {
-        res[i] = dev_his_bins + (i * x_size_padded * sizeof(uint32_t));
+    __syncthreads();
+    for (size_t i = threadIdx.x; i < HISTO_HEIGHT * HISTO_WIDTH; i += blockDim.x) {
+        const uint32_t addsup = s_Hist[0][i] + s_Hist[1][i] + s_Hist[2][i] + s_Hist[3][i] + s_Hist[4][i] + s_Hist[5][i];
+        atomicAdd(result + i, addsup);
+           // more concurrency exploiedk
     }
-    cudaMemcpy(device, res, y_size*sizeof(void*), cudaMemcpyHostToDevice);
 }
 
-void copy_to_device_histogram_bins(uint32_t *device, const uint32_t *host, 
-                                   size_t y_size, size_t x_size)
+void* allocate_device(size_t size) 
 {
-    const size_t x_size_padded = (x_size + 128) & 0xFFFFFF80;
-	int size = x_size_padded * y_size * sizeof(uint32_t);
+    void* dev_ptr;
+    cudaMalloc(&dev_ptr, size);
+    return dev_ptr;
+}
+
+void copy_to_device(void* device, void* host, size_t size)
+{
     cudaMemcpy(device, host, size, cudaMemcpyHostToDevice);
 }
 
-void copy_from_device_bins(uint8_t *host, const uint8_t *device, size_t h, size_t w)
+void free_device(void *device)
 {
-	int size = w * h * sizeof(uint8_t);
-	cudaMemcpy(host, device, size, cudaMemcpyDeviceToHost);
+    cudaFree(device);
 }
+
+void copy_from_device(void* host, void* device, size_t size)
+{
+    cudaMemcpy(host, device, size, cudaMemcpyDeviceToHost);
+}
+
+void bin32_to_bin8(uint32_t *kernel_bin32, uint8_t* kernel_bin8)
+{
+    for (int i =0; i < HISTO_HEIGHT*HISTO_WIDTH; ++i) {
+        if (kernel_bin32[i] > 255) {
+            kernel_bin8[i] = 255;
+        } else {
+            kernel_bin8[i] = kernel_bin32[i];
+        }
+    }
+}
+
+

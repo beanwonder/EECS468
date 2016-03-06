@@ -243,6 +243,5 @@ __global__ void copySharedMem(float *odata, const float *idata)
   for (int j = 0; j < TILE_DIM; j += BLOCK_ROWS)
      odata[(y+j)*width + x] = tile[(threadIdx.y+j)*TILE_DIM + threadIdx.x];          
 }
-
-#endif // #ifndef _MATRIXMUL_KERNEL_H_
 */
+#endif // #ifndef _MATRIXMUL_KERNEL_H_
