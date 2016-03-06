@@ -65,7 +65,7 @@ void FreeDeviceMatrix(Matrix* M);
 void FreeMatrix(Matrix* M);
 
 void MatrixMulOnDevice(const Matrix M, const Matrix N, Matrix P);
-
+void MatrixInversionOnDevice(Matrix Mtemp_h , int size , Matrix Mtemp1_h);
 ////////////////////////////////////////////////////////////////////////////////
 // Program main
 ////////////////////////////////////////////////////////////////////////////////
@@ -111,7 +111,7 @@ int main(int argc, char** argv) {
 	// M * N on the device
 	// MatrixMulOnDevice(M, N, P);
     Matrix res = AllocateMatrix(M.height, M.width, 0);
-    MatrixInversionOnDevice(M, invert);
+    MatrixInversionOnDevice(M, M.height, res);
     
 	printf("GPU computation complete\n");
 	// compute the matrix multiplication on the CPU for comparison

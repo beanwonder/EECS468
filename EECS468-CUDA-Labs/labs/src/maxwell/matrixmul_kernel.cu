@@ -180,7 +180,7 @@ __global__ void fixColumnKernel(Matrix M, int size, int colId) {
     
     __shared__ float col[512];
     // jth element
-    __shared__ float AcolIdj;
+    __shared__ float AColIdj;
     __shared__ float colj[512];
     
     col[i] = M.elements[i * size + j];
