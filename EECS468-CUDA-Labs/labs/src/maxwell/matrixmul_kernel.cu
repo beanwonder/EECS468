@@ -162,7 +162,8 @@ __global__ void fixRowKernel(Matrix M, int size, int rowId) {
     
     const int colId = threadIdx.x;
     Ri[colId] = M.elements[size * rowId + colId];
-    Aii = M.elements[size * rowId + SharedrowId];
+    // TODO may be wrong here
+    Aii = M.elements[size * rowId + rowId];
     __syncthreads();
     
     Ri[colId] = Ri[colId] / Aii;
@@ -195,7 +196,7 @@ __global__ void fixColumnKernel(Matrix M, int size, int colId) {
 }
 
 // matrix transpose
-
+/*
 __global__ void transposeNaive(float *odata, const float *idata)
 {
   int x = blockIdx.x * TILE_DIM + threadIdx.x;
@@ -244,3 +245,4 @@ __global__ void copySharedMem(float *odata, const float *idata)
 }
 
 #endif // #ifndef _MATRIXMUL_KERNEL_H_
+*/
