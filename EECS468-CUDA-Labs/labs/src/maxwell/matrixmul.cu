@@ -127,7 +127,7 @@ void display_matrix(Matrix M) {
     std::cout << ("Matrix display :\n");
     for (int i=0; i < M.height; ++i) {
         for (int j=0; j < M.width; ++j) {
-            std::cout << M.elements[i * M.height + j] << ' ';
+            std::cout << M.elements[i * M.width + j] << ' ';
         }
         std::cout << '\n';
     }
@@ -139,19 +139,18 @@ void MatrixInversionOnDevice(Matrix Mtemp_h , int size , Matrix Mtemp1_h)
 { 
     
     //Memory allocation on the device 
+    display_matrix(Mtemp_h);
     Matrix MM_host = AllocateMatrix(Mtemp_h.height, Mtemp_h.width*2, 0);
     Matrix MM_device = AllocateDeviceMatrix(MM_host);
     
     for (int i=0; i < size; ++i) {
         for (int j=0; j < size; ++j) {
-            MM_host.elements[i * MM_host.width + j] = Mtemp_h[i * Mtemp_h.width + j];
+            MM_host.elements[i * MM_host.width + j] = Mtemp_h.elements[i * Mtemp_h.width + j];
         }
     }
     
     for (int i=0; i < size; ++i) {
-        for (int j=0; j < size; ++j) {
-            MM_host.elements[i * MM_host.width + size + j] = 1;
-        }
+        MM_host.elements[i * MM_host.width + size + i] = 1;
     }
     
     display_matrix(MM_host);
@@ -161,16 +160,17 @@ void MatrixInversionOnDevice(Matrix Mtemp_h , int size , Matrix Mtemp1_h)
     //Kernel call 
     // MatrixInversionKernel1<<<dimGrid, dimBlock>>>(Ma, Mb, numvar); 
     
+    // MM_device augmented matrix
     dim3 dimGrid1(1);
     dim3 dimGridn(size);
     dim3 dimBlockn(size);
     for (int j=0; j < size; ++j) {
         // addup
-        addupKernel<<<dimGrid1, dimBlockn>>>(Ma, size, j);
+        addupKernel<<<dimGrid1, dimBlockn>>>(MM_device, size, j);
         // step2
-        fixRowKernel<<<dimGrid1, dimBlockn>>>(Ma, size, j);
+        fixRowKernel<<<dimGrid1, dimBlockn>>>(MM_device, size, j);
         // step3
-        fixColumnKernel<<<dimGridn, dimBlockn>>>(Ma, size, j);
+        fixColumnKernel<<<dimGridn, dimBlockn>>>(MM_device, size, j);
     }
     
     // Coping data to host from device 
