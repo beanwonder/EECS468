@@ -98,6 +98,7 @@ int main(int argc, char** argv) {
 		WriteFile(P, argv[1]);
 	} 
     */
+    /*
     // output M
     printf("original M :\n");
     for (int i=0; i < M.height; ++i) {
@@ -114,12 +115,22 @@ int main(int argc, char** argv) {
         }
         std::cout << '\n';
     }
-    
+    */
 	// Free matrices
 	FreeMatrix(&M);
 	FreeMatrix(&N);
 	FreeMatrix(&P);
 	return 0;
+}
+
+void display_matrix(Matrix M) {
+    std::cout << ("Matrix display :\n");
+    for (int i=0; i < M.height; ++i) {
+        for (int j=0; j < M.width; ++j) {
+            std::cout << M.elements[i * M.height + j] << ' ';
+        }
+        std::cout << '\n';
+    }
 }
 
 // MatrixMulKernel<<<dimGrid, dimBlock>>>(Md, Nd, Pd);
@@ -128,15 +139,24 @@ void MatrixInversionOnDevice(Matrix Mtemp_h , int size , Matrix Mtemp1_h)
 { 
     
     //Memory allocation on the device 
-    Matrix Ma = AllocateDeviceMatrix(Mtemp_h);
-    Matrix Mb = AllocateDeviceMatrix(Mtemp1_h);
+    Matrix MM_host = AllocateMatrix(Mtemp_h.height, Mtemp_h.width*2, 0);
+    Matrix MM_device = AllocateDeviceMatrix(MM_host);
     
-    //Copying data to device from host
-    CopyToDeviceMatrix(Ma, Mtemp_h);
-   
-    //Defining size of Thread Block 
-    //dim3 dimBlock(numvar+1,numvar,1); 
-    // dim3 dimGrid(1,1,1); 
+    for (int i=0; i < size; ++i) {
+        for (int j=0; j < size; ++j) {
+            MM_host.elements[i * MM_host.width + j] = Mtemp_h[i * Mtemp_h.width + j];
+        }
+    }
+    
+    for (int i=0; i < size; ++i) {
+        for (int j=0; j < size; ++j) {
+            MM_host.elements[i * MM_host.width + size + j] = 1;
+        }
+    }
+    
+    display_matrix(MM_host);
+
+    CopyToDeviceMatrix(MM_device, MM_host);
     
     //Kernel call 
     // MatrixInversionKernel1<<<dimGrid, dimBlock>>>(Ma, Mb, numvar); 
@@ -154,10 +174,12 @@ void MatrixInversionOnDevice(Matrix Mtemp_h , int size , Matrix Mtemp1_h)
     }
     
     // Coping data to host from device 
-    CopyFromDeviceMatrix(Mtemp1_h, Mb);
+    CopyFromDeviceMatrix(MM_host, MM_device);
     //Deallocating memory on the device 
-    FreeDeviceMatrix(&Ma); 
-    FreeDeviceMatrix(&Mb); 
+    display_matrix(MM_host);
+    
+    FreeDeviceMatrix(&MM_device); 
+    //FreeDeviceMatrix(&Mb); 
 }
 
 
