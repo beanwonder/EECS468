@@ -177,7 +177,11 @@ void MatrixInversionOnDevice(Matrix Mtemp_h , int size , Matrix Mtemp1_h)
     CopyFromDeviceMatrix(MM_host, MM_device);
     //Deallocating memory on the device 
     display_matrix(MM_host);
-    
+    for (int i=0; i < size; ++i) {
+        for (int j=0; j < size; ++j) {
+            Mtemp1_h.elements[i * Mtemp1_h.width + j] = MM_host.elements[i * MM_host.width + size + j];
+        }
+    }
     FreeDeviceMatrix(&MM_device); 
     //FreeDeviceMatrix(&Mb); 
 }
