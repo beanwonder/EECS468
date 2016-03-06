@@ -52,8 +52,8 @@
 __global__ void MatrixMulKernel(Matrix M, Matrix N, Matrix P)
 {
     const int TILE_DIM = 32;
-    __shared__ float Ms[TILE_DIM][TILE_DIM];
-    __shared__ float Ns[TILE_DIM][TILE_DIM];
+    __shared__ float Ms[TILE_DIM][TILE_DIM+1];
+    __shared__ float Ns[TILE_DIM][TILE_DIM+1];
 
     const int Pcols = P.width;
     const int Prows = P.height;
@@ -86,7 +86,6 @@ __global__ void MatrixMulKernel(Matrix M, Matrix N, Matrix P)
 
         for (int n=0; n < TILE_DIM; ++n) {
             // if ((k*TILE_DIM + n < Mcols && row < Mrows) && (k*TILE_DIM + n < Nrows && col < Ncols)) {
-                // but divergence
             // no divergence since load zero for unvalid data
             Pvalue += Ms[threadIdx.y][n] * Ns[n][threadIdx.x];
             // }
