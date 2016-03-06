@@ -180,7 +180,7 @@ __global__ void fixColumnKernel(Matrix M, int size, int colId) {
     
     __shared__ float col[512];
     // jth element
-    __shared__ float AcolIdj;
+    __shared__ float AColIdj;
     __shared__ float colj[512];
     
     col[i] = M.elements[i * size + j];
@@ -243,6 +243,5 @@ __global__ void copySharedMem(float *odata, const float *idata)
   for (int j = 0; j < TILE_DIM; j += BLOCK_ROWS)
      odata[(y+j)*width + x] = tile[(threadIdx.y+j)*TILE_DIM + threadIdx.x];          
 }
-
-#endif // #ifndef _MATRIXMUL_KERNEL_H_
 */
+#endif // #ifndef _MATRIXMUL_KERNEL_H_
