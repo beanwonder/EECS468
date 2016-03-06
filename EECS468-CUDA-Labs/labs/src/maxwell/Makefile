@@ -40,7 +40,7 @@
 ################################################################################
 
 # Add source files here
-EXECUTABLE	:= lab2
+EXECUTABLE	:= maxwell
 
 # Cuda source files (compiled with cudacc)
 CUFILES		:= matrixmul.cu
