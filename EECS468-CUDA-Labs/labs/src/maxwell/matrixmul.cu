@@ -42,7 +42,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
-
+#include <iostream>
 // includes, project
 #include <cutil.h>
 
@@ -123,15 +123,33 @@ int main(int argc, char** argv) {
 	// CUTBoolean res = cutComparefe(reference.elements, P.elements, P.height*P.width, 0.001f);
 	// printf("Test %s\n", (1 == res) ? "PASSED" : "FAILED");
 
-	if(argc == 5)
+    /* 
+   	if(argc == 5)
 	{
 		WriteFile(P, argv[4]);
 	}
 	else if(argc == 2)
 	{
 		WriteFile(P, argv[1]);
-	}   
-
+	} 
+    */
+    // output M
+    printf("original M :\n");
+    for (int i=0; i < M.height; ++i) {
+        for (int j=0; j < M.width; ++j) {
+            printf("%f "M.elements[i][j]);
+        }
+        printf("\n");
+    } 
+    
+    cout << ("inversion M :\n");
+    for (int i=0; i < M.height; ++i) {
+        for (int j=0; j < M.width; ++j) {
+            printf("%f "M.elements[i][j]);
+        }
+        printf("\n");
+    }
+    
 	// Free matrices
 	FreeMatrix(&M);
 	FreeMatrix(&N);
