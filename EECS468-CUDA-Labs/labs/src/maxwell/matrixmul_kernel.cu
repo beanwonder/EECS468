@@ -147,7 +147,7 @@ __global__ void fixColumnKernel(Matrix M, int size, int colId) {
     __shared__ float AColIdj;
     __shared__ float colj[512];
     
-    col[i] = M.elements[i * size + colj];
+    col[i] = M.elements[i * size + colId];
     if (col[i] != 0) {
         colj[i] = M.elements[i * size + j];
         AColIdj = M.elements[colId * size + j];
