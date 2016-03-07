@@ -166,11 +166,11 @@ void MatrixInversionOnDevice(Matrix Mtemp_h , int size , Matrix Mtemp1_h)
     dim3 dimBlockn(size);
     for (int j=0; j < size; ++j) {
         // addup
-        addupKernel<<<dimGrid1, dimBlockn>>>(MM_device, size, j);
+        addupKernel<<<dimGrid1, dimBlockn>>>(MM_device, 2*size, j);
         // step2
-        fixRowKernel<<<dimGrid1, dimBlockn>>>(MM_device, size, j);
+        fixRowKernel<<<dimGrid1, dimBlockn>>>(MM_device, 2*size, j);
         // step3
-        fixColumnKernel<<<dimGridn, dimBlockn>>>(MM_device, size, j);
+        fixColumnKernel<<<dimGridn, dimBlockn>>>(MM_device, 2*size, j);
     }
     
     // Coping data to host from device 

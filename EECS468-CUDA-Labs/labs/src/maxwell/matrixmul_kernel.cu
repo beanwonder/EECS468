@@ -160,7 +160,6 @@ __global__ void fixColumnKernel(Matrix M, int size, int colId) {
         }
         M.elements[i * M.width + j] = colj[i];
     }
-    
 }
 
 // matrix transpose
