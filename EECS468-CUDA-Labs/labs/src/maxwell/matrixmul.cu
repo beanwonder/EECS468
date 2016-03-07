@@ -137,7 +137,6 @@ void display_matrix(Matrix M) {
 // this function run on cpu and calculate matrixInversion
 void MatrixInversionOnDevice(Matrix Mtemp_h , int size , Matrix Mtemp1_h) 
 { 
-    
     //Memory allocation on the device 
     display_matrix(Mtemp_h);
     Matrix MM_host = AllocateMatrix(Mtemp_h.height, Mtemp_h.width*2, 0);
@@ -152,9 +151,8 @@ void MatrixInversionOnDevice(Matrix Mtemp_h , int size , Matrix Mtemp1_h)
     for (int i=0; i < size; ++i) {
         MM_host.elements[i * MM_host.width + size + i] = 1;
     }
-    
-    display_matrix(MM_host);
 
+    display_matrix(MM_host);
     CopyToDeviceMatrix(MM_device, MM_host);
     
     //Kernel call 
@@ -163,7 +161,7 @@ void MatrixInversionOnDevice(Matrix Mtemp_h , int size , Matrix Mtemp1_h)
     // MM_device augmented matrix
     dim3 dimGrid1(1);
     dim3 dimGridn(size);
-    dim3 dimBlockn(size);
+    dim3 dimBlockn(2*size);
     for (int j=0; j < size; ++j) {
         // addup
         addupKernel<<<dimGrid1, dimBlockn>>>(MM_device, 2*size, j);
@@ -175,13 +173,17 @@ void MatrixInversionOnDevice(Matrix Mtemp_h , int size , Matrix Mtemp1_h)
     
     // Coping data to host from device 
     CopyFromDeviceMatrix(MM_host, MM_device);
+
+
     //Deallocating memory on the device 
+
     display_matrix(MM_host);
     for (int i=0; i < size; ++i) {
         for (int j=0; j < size; ++j) {
             Mtemp1_h.elements[i * Mtemp1_h.width + j] = MM_host.elements[i * MM_host.width + size + j];
         }
     }
+    display_matrix(Mtemp1_h);
     FreeDeviceMatrix(&MM_device); 
     //FreeDeviceMatrix(&Mb); 
 }

@@ -108,17 +108,17 @@ __device__ __global__ void MatrixInversionKernel1(Matrix Ma, Matrix Mb, int size
 __global__ void addupKernel(Matrix M, int size, int rowId) {
     
     const int colId = threadIdx.x;
-    if (M.elements[size * rowId + colID] != 0) {
+    if (M.elements[size * rowId + colId] != 0) {
         return;
-    }
-    
-    for (int k=rowId+1; k < M.height; ++k) {
-        // won't divergence
-        // m[k][j] != 0 do
-        if (M.elements[size * k + rowId] != 0) {
-            M.elements[size * rowId + colId] += M.elements[size * k + colId];
-            return;
-            // printf("%f", M.elements[size * k + rowId]);
+    } else {
+        for (int k=rowId+1; k < M.height; ++k) {
+            // won't divergence
+            // m[k][j] != 0 do
+            if (M.elements[size * k + rowId] != 0) {
+                M.elements[size * rowId + colId] += M.elements[size * k + colId];
+                return;
+                // printf("%f", M.elements[size * k + rowId]);
+            }
         }
     }
 }
