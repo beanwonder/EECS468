@@ -115,9 +115,8 @@ __global__ void addupKernel(Matrix M, int size, int rowId) {
             M.elements[size * rowId + colId] += M.elements[size * k + colId];
                 return;
                 // printf("%f", M.elements[size * k + rowId]);
-            }
-        }
-    
+         }
+     }
 }
 
 __global__ void fixRowKernel(Matrix M, int size, int rowId) {
@@ -148,14 +147,14 @@ __global__ void fixColumnKernel(Matrix M, int size, int colId) {
     __shared__ float AColIdj;
     __shared__ float colj[512];
     
-    col[i] = M.elements[i * size + j];
+    col[i] = M.elements[i * size + colj];
     if (col[i] != 0) {
         colj[i] = M.elements[i * size + j];
         AColIdj = M.elements[colId * size + j];
         if (i != colId) {
             colj[i] = colj[i] - AColIdj  * col[i];
         }
-        M.elements[i * M.width + j] = colj[i];
+        M.elements[i * size + j] = colj[i];
     }
 }
 
