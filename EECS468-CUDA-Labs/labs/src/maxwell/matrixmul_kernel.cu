@@ -142,6 +142,7 @@ __global__ void fixColumnKernel(Matrix M, int size, int colId) {
     const int i = threadIdx.x;
     const int j = blockIdx.x;
     
+    // printf("(%d, %d)", j, i);
     __shared__ float col[512];
     // jth element
     __shared__ float AColIdj;
