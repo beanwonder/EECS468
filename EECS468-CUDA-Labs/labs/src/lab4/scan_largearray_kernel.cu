@@ -38,7 +38,7 @@ void copyFromDeviceArr(float *hostArr, const float *devArr, int numElements) {
 
 
 // Lab4: Kernel Functions
-__global__ recudtionKernel(float *scanArr, int numElements) {
+__global__ void recudtionKernel(float *scanArr, int numElements) {
   // step 1
   printf("start step1\n");
   int stride = 1;
@@ -53,7 +53,7 @@ __global__ recudtionKernel(float *scanArr, int numElements) {
   printf("finish step1\n");
 }
 
-__global__ postScanKernenl(float *scanArr, int numElements) {
+__global__ void postScanKernenl(float *scanArr, int numElements) {
   // step 2
   printf("start step2\n");
   int stride = BLOCK_SIZE >> 1;
