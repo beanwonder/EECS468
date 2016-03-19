@@ -42,7 +42,12 @@ __global__ void recudtionKernel(float *scanArr, int numElements) {
   // step 1
   // printf("start step1\n");
   __shared__ scan_array[BLOCK_SIZE];
-  scan_array[threadIdx.x] = scanArr[threadIdx.x];
+
+  if (threadIdx.x < numElements) {
+    scan_array[threadIdx.x] = scanArr[threadIdx.x];
+  }
+  __syncthreads();
+
   int stride = 1;
   while (stride < BLOCK_SIZE) {
     int idx = (threadIdx.x + 1) * stride * 2 - 1;
@@ -52,7 +57,10 @@ __global__ void recudtionKernel(float *scanArr, int numElements) {
     stride = stride * 2;
     __syncthreads();
   }
-  scanArr[threadIdx.x] = scan_array[threadIdx.x];
+
+  if (threadIdx.x < numElements) {
+    scanArr[threadIdx.x] = scan_array[threadIdx.x];
+  }
   __syncthreads();
   // printf("finish step1\n");
 }
@@ -61,7 +69,12 @@ __global__ void postScanKernenl(float *scanArr, int numElements) {
   // step 2
   // printf("start step2\n");
   __shared__ scan_array[BLOCK_SIZE];
-  scan_array[threadIdx.x] = scanArr[threadIdx.x];
+
+  if (threadIdx.x M numElements) {
+    scan_array[threadIdx.x] = scanArr[threadIdx.x];
+  }
+  __syncthreads();
+  
   int stride = BLOCK_SIZE >> 1;
   while (stride > 1) {
     int idx = (threadIdx.x + 1) * stride * 2 - 1;
@@ -72,7 +85,10 @@ __global__ void postScanKernenl(float *scanArr, int numElements) {
     __syncthreads();
   }
   // printf("finish step2\n");
-  scanArr[threadIdx.x] = scan_array[threadIdx.x];
+  if (threadIdx.x < numElements) {
+    scanArr[threadIdx.x] = scan_array[threadIdx.x];
+  }
+  __syncthreads();
 }
 
 // **===-------- Lab4: Modify the body of this function -----------===**
@@ -94,6 +110,8 @@ void prescanArray(float *outArray, float *inArray, int numElements)
   postScanKernenl<<<dimGrid, dimBlock>>>(devArr, numElements);
 
   copyFromDeviceArr(outArray, devArr, numElements);
+
+  cudaFree(devArr);
 }
 // **===-----------------------------------------------------------===**
 
