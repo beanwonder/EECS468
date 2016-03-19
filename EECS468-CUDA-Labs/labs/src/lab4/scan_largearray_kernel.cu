@@ -40,6 +40,7 @@ void copyFromDeviceArr(float *hostArr, const float *devArr, int numElements) {
 // Lab4: Kernel Functions
 __global__ recudtionKernel(float *scanArr, int numElements) {
   // step 1
+  printf("start step1\n");
   int stride = 1;
   while (stride < BLOCK_SIZE) {
     int idx = (threadIdx.x + 1) * stride * 2 - 1;
@@ -47,12 +48,14 @@ __global__ recudtionKernel(float *scanArr, int numElements) {
       scanArr[idx] += scanArr[idx-stride];
     }
     stride *= 2;
+    __syncthreads();
   }
-  __syncthreads();
+  printf("finish step1\n");
 }
 
 __global__ postScanKernenl(float *scanArr, int numElements) {
   // step 2
+  printf("start step2\n");
   int stride = BLOCK_SIZE >> 1;
   while (stride > 1) {
     int idx = (threadIdx.x + 1) * stride * 2 - 1;
@@ -62,6 +65,7 @@ __global__ postScanKernenl(float *scanArr, int numElements) {
     stride >>= 1;
     __syncthreads();
   }
+  printf("finish step2\n");
 }
 
 // **===-------- Lab4: Modify the body of this function -----------===**
@@ -75,6 +79,7 @@ void prescanArray(float *outArray, float *inArray, int numElements)
   dim3 dimBlock(BLOCK_SIZE);
   dim3 dimGrid(1);
 
+  // launch kernels
   recudtionKernel<<<dimGrid, dimBlock>>>(devArr, numElements);
   postScanKernenl<<<dimGrid, dimBlock>>>(devArr, numElements);
 
