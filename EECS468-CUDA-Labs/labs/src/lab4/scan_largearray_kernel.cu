@@ -23,6 +23,7 @@ float* allocateArr(int numElements) {
     return (float*) malloc(numElements*sizeof(float));
 }
 
+
 void copy2DeviceArr(float *deviceArr, const float *hostArr, int numElements) {
     int size = numElements * sizeof(float);
     cudaMemcpy(deviceArr, hostArr, size, cudaMemcpyHostToDevice);
