@@ -40,32 +40,39 @@ void copyFromDeviceArr(float *hostArr, const float *devArr, int numElements) {
 // Lab4: Kernel Functions
 __global__ void recudtionKernel(float *scanArr, int numElements) {
   // step 1
-  printf("start step1\n");
+  // printf("start step1\n");
+  __shared__ scan_array[BLOCK_SIZE];
+  scan_array[threadIdx.x] = scanArr[threadIdx.x];
   int stride = 1;
   while (stride < BLOCK_SIZE) {
     int idx = (threadIdx.x + 1) * stride * 2 - 1;
     if (idx < BLOCK_SIZE) {
-      scanArr[idx] += scanArr[idx-stride];
+      scan_array[idx] += scan_array[idx-stride];
     }
-    stride *= 2;
+    stride = stride * 2;
     __syncthreads();
   }
-  printf("finish step1\n");
+  scanArr[threadIdx.x] = scan_array[threadIdx.x];
+  __syncthreads();
+  // printf("finish step1\n");
 }
 
 __global__ void postScanKernenl(float *scanArr, int numElements) {
   // step 2
-  printf("start step2\n");
+  // printf("start step2\n");
+  __shared__ scan_array[BLOCK_SIZE];
+  scan_array[threadIdx.x] = scanArr[threadIdx.x];
   int stride = BLOCK_SIZE >> 1;
   while (stride > 1) {
     int idx = (threadIdx.x + 1) * stride * 2 - 1;
     if (idx < BLOCK_SIZE) {
-      scanArr[idx+stride] += scanArr[idx];
+      scan_array[idx+stride] += scan_array[idx];
     }
-    stride >>= 1;
+    stride = stride >> 1;
     __syncthreads();
   }
-  printf("finish step2\n");
+  // printf("finish step2\n");
+  scanArr[threadIdx.x] = scan_array[threadIdx.x];
 }
 
 // **===-------- Lab4: Modify the body of this function -----------===**
@@ -81,6 +88,7 @@ void prescanArray(float *outArray, float *inArray, int numElements)
 
   // launch kernels
   recudtionKernel<<<dimGrid, dimBlock>>>(devArr, numElements);
+
   postScanKernenl<<<dimGrid, dimBlock>>>(devArr, numElements);
 
   copyFromDeviceArr(outArray, devArr, numElements);
