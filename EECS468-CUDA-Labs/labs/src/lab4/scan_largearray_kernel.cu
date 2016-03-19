@@ -73,6 +73,7 @@ __global__ void postScanKernenl(float *scanArr, int numElements) {
   }
   // printf("finish step2\n");
   scanArr[threadIdx.x] = scan_array[threadIdx.x];
+  __syncthreads();
 }
 
 // **===-------- Lab4: Modify the body of this function -----------===**
