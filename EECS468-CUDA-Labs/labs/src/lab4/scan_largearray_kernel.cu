@@ -41,7 +41,7 @@ void copyFromDeviceArr(float *hostArr, const float *devArr, int numElements) {
 __global__ void recudtionKernel(float *scanArr, int numElements) {
   // step 1
   // printf("start step1\n");
-  __shared__ scan_array[BLOCK_SIZE];
+  __shared__ int scan_array[BLOCK_SIZE];
   scan_array[threadIdx.x] = scanArr[threadIdx.x];
   int stride = 1;
   while (stride < BLOCK_SIZE) {
@@ -60,7 +60,7 @@ __global__ void recudtionKernel(float *scanArr, int numElements) {
 __global__ void postScanKernenl(float *scanArr, int numElements) {
   // step 2
   // printf("start step2\n");
-  __shared__ scan_array[BLOCK_SIZE];
+  __shared__ int scan_array[BLOCK_SIZE];
   scan_array[threadIdx.x] = scanArr[threadIdx.x];
   int stride = BLOCK_SIZE >> 1;
   while (stride > 1) {
