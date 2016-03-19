@@ -87,8 +87,10 @@ void prescanArray(float *outArray, float *inArray, int numElements)
   dim3 dimGrid(1);
 
   // launch kernels
+  printf("launching step1\n");
   recudtionKernel<<<dimGrid, dimBlock>>>(devArr, numElements);
 
+  printf("launching step 2\n");
   postScanKernenl<<<dimGrid, dimBlock>>>(devArr, numElements);
 
   copyFromDeviceArr(outArray, devArr, numElements);
